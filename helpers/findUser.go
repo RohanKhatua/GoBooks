@@ -26,3 +26,14 @@ func FindUserByName (userName string) (models.User, error) {
 
 	return user, nil
 }
+
+func FindUserByID (id uint) (models.User, error) {
+	var user models.User
+	database.Database.Db.First(&user, "id=?", id)
+
+	if user.ID==0 {
+		return user, errors.New("user does not exist")
+	}
+
+	return user, nil
+}
