@@ -1,8 +1,13 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type Book struct {
+	gorm.Model
 	ID          uint `json:"id" gorm:"primaryKey"`
 	CreatedAt   time.Time
 	Author      string `json:"author"`
@@ -11,4 +16,5 @@ type Book struct {
 	Quantity    uint   `json:"quantity"`
 	Description string `json:"description"`
 	Price       uint   `json:"price"`
+	Reviews []Review
 }
