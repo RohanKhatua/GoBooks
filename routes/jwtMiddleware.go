@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"log"
 	"time"
 
 	"github.com/RohanKhatua/fiber-jwt/helpers"
@@ -11,7 +12,7 @@ import (
 func JWTMiddleware(c *fiber.Ctx) error {
 	token := c.Get("Authorization")
 	if token == "" {
-		return c.Status(401).JSON("Unauthorized")
+		return c.Status(401).JSON("No Token")
 	}
 
 	// Validate the token
@@ -22,15 +23,18 @@ func JWTMiddleware(c *fiber.Ctx) error {
 	})
 
 	if err != nil || !parsedToken.Valid || !claims.VerifyExpiresAt(time.Now().Unix(), true) {
-		return c.Status(401).JSON("Unauthorized")
+		return c.Status(401).JSON("Token Invalid")
 	}
 
 	// Set user ID in the context's "locals"
-	userID, ok := claims["user_id"].(float64)
-	if !ok {
-		return c.Status(401).JSON("Unauthorized")
-	}
-	c.Locals("user_id", int(userID)) // Convert to int
+	c.Locals("user_id", claims["user_id"])
+	c.Locals("user_name", claims["user_name"])
+	c.Locals("user_role", claims["role"])
+	log.Println("Current Logged In User :")
+	log.Println("USER ID :",claims["user_id"])
+	log.Println("USER NAME : ", claims["user_name"])
+	log.Println("USER_ROLE : ", claims["role"])
+	// Convert to int
 
 	return c.Next()
 }

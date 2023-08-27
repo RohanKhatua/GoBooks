@@ -25,5 +25,7 @@ func GenerateJWT(user models.User) (string, error) {
 		return "", err
 	}
 
+	
+
 	return tokenString, nil
 }
