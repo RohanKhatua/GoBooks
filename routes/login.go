@@ -8,8 +8,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type LoginData struct {
+	UserName string `json:"user_name"`
+	Password string `json:"pass"`
+}
+
 func Login(c *fiber.Ctx) error {
-	var recdUserData UserReceive
+	var recdUserData LoginData
 
 	if err:= c.BodyParser(&recdUserData); err!=nil {
 		return c.Status(400).JSON(err.Error())

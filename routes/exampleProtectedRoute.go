@@ -1,7 +1,19 @@
 package routes
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"fmt"
+	"log"
+
+	"github.com/gofiber/fiber/v2"
+)
 
 func ExampleProtectedRoute(c *fiber.Ctx) error {
-	return c.Status(200).JSON("This is a protected Route")
+	log.Println(c.Locals("user_id").(float64))	
+
+	var idInt int = int(c.Locals("user_id").(float64))
+	var userRole string = c.Locals("user_role").(string)
+
+	response := fmt.Sprintf("ID=%d Role=%s", idInt, userRole)
+	
+	return c.Status(200).JSON(response)
 }
