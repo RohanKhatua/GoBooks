@@ -13,6 +13,6 @@ type Review struct {
 	ReviewDate time.Time
 	Rating int `json:"rating"`
 	Comment string `json:"comment"`
-	User User
-	Book Book
+	User User `gorm:"foreignKey:UserID"`
+	Book Book `gorm:"foreginKey:BookID"`
 }
