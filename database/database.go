@@ -14,11 +14,16 @@ type DbInstance struct {
 	Db *gorm.DB
 }
 
+func GlobalActivationScope(db *gorm.DB) *gorm.DB {
+	return db.Where("is_activated = ?", true)
+}
+
 var Database DbInstance
 
 func ConnectDb () {
 	dsn := "user=myuser password=password dbname=mydb host=localhost port=5432 sslmode=disable"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db.Scopes(GlobalActivationScope)
 
 	if err!=nil {
 		log.Fatal("Failed to connect to DB")
