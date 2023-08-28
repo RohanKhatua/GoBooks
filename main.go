@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-
 	"github.com/RohanKhatua/fiber-jwt/database"
 	"github.com/RohanKhatua/fiber-jwt/routes"
 	"github.com/gofiber/fiber/v2"
@@ -59,6 +58,7 @@ func setupRoutes(app *fiber.App) {
 
 func main() {
 	database.ConnectDb()
+	database.SeedDatabase(database.Database.Db)
 	app := fiber.New()
 
 	setupRoutes(app)
