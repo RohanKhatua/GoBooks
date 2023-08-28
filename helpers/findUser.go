@@ -7,8 +7,6 @@ import (
 	"github.com/RohanKhatua/fiber-jwt/models"
 )
 
-//this is a helper function not a route
-
 //find by userName check if the username is already taken
 func FindUserName (userName string) bool{
 	var user models.User

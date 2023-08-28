@@ -3,9 +3,9 @@ package routes
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
-	"log"
 
+
+	customlogger "github.com/RohanKhatua/fiber-jwt/customLogger"
 	"github.com/RohanKhatua/fiber-jwt/database"
 	"github.com/RohanKhatua/fiber-jwt/models"
 	"github.com/gofiber/fiber/v2"
@@ -34,8 +34,10 @@ func CreateResponseUser(user models.User) ResponseUser {
 	}
 }
 
+
 // get user info through request body
 func SignUp(c *fiber.Ctx) error {
+	myLogger := customlogger.NewLogger()
 	var recdUserData UserReceive
 
 	// problem with request body
@@ -47,19 +49,20 @@ func SignUp(c *fiber.Ctx) error {
 	var newUser models.User
 
 	if helpers.FindUserName(recdUserData.UserName) {
-		log.Println("Duplicate User found")
+		// log.Println("Duplicate User found")
+		myLogger.Error("User Already Exists")
 		return c.Status(409).JSON("User Already Exists")
 	}
 
 	// Check if user has tried to get admin account and verify creds
 	if recdUserData.SuperSecretAttempt != "" {
 		super_secret := helpers.GetSuperSecret()
-		fmt.Println("Reached Here")
+		// fmt.Println("Reached Here")
 		if super_secret == recdUserData.SuperSecretAttempt {
-			log.Println("Key Matched, Admin Account Created")
+			myLogger.Info("Key Matched, Admin Account Created")
 			newUser.Role = "ADMIN"
 		} else {
-			log.Println("Bad Key - User Creation Failed")
+			myLogger.Error("Bad Key - Admin Account Creation Failed")
 			return c.Status(401).JSON("Unauthorized")
 		}
 	} else {
@@ -78,11 +81,13 @@ func SignUp(c *fiber.Ctx) error {
 	// Put the new user in the db
 
 	database.Database.Db.Create(&newUser)
+	myLogger.Info("Added New User to DB")
 
 	// create JWT
 
 	token, err := helpers.GenerateJWT(newUser)
 	if err != nil {
+		myLogger.Error("Token Creation Failed")
 		return c.Status(500).JSON("Internal Server Error")
 	}
 

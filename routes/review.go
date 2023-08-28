@@ -5,6 +5,7 @@ import (
 
 	"math"
 
+	"github.com/RohanKhatua/fiber-jwt/customLogger"
 	"github.com/RohanKhatua/fiber-jwt/database"
 	"github.com/RohanKhatua/fiber-jwt/models"
 	"github.com/gofiber/fiber/v2"
@@ -22,17 +23,24 @@ type RespReview struct {
 }
 
 func AddReview(c *fiber.Ctx) error {
+	myLogger := customLogger.NewLogger()
 	var userID int = int(c.Locals("user_id").(float64))
 
 	var recvReview RecvReview
 
 	if err:= c.BodyParser(&recvReview); err!=nil {
+		myLogger.Error("JSON Parsing Failed")
 		return c.Status(400).JSON(err.Error())
 	}
 
 	var book models.Book
 
-	database.Database.Db.Find(&book, "id=?", recvReview.BookID)
+	err := database.Database.Db.Find(&book, "id=?", recvReview.BookID).Error
+
+	if err != nil {
+		myLogger.Error("DB Search Failed")
+		return c.Status(400).JSON(err.Error())
+	}
 
 	if book.ID == 0 {
 		return c.Status(400).JSON("Invalid Book ID")
@@ -42,7 +50,12 @@ func AddReview(c *fiber.Ctx) error {
 
 	var purchase models.Purchase
 
-	database.Database.Db.Find(&purchase, "user_id=? AND book_id=?", userID, recvReview.BookID)
+	err = database.Database.Db.Find(&purchase, "user_id=? AND book_id=?", userID, recvReview.BookID).Error
+
+	if err != nil {
+		myLogger.Error("DB Search Failed")
+		return c.Status(400).JSON(err.Error())
+	}
 
 	if purchase.ID == 0 {
 		return c.Status(400).JSON("You have not purchased this book")
@@ -52,7 +65,12 @@ func AddReview(c *fiber.Ctx) error {
 
 	var checkReview models.Review
 
-	database.Database.Db.Find(&checkReview, "user_id=? AND book_id=?", userID, recvReview.BookID)
+	err = database.Database.Db.Find(&checkReview, "user_id=? AND book_id=?", userID, recvReview.BookID).Error
+
+	if err != nil {
+		myLogger.Error("DB Search Failed")
+		return c.Status(400).JSON(err.Error())
+	}
 
 	if checkReview.ID != 0 {
 		return c.Status(400).JSON("You have already reviewed this book")
@@ -69,7 +87,12 @@ func AddReview(c *fiber.Ctx) error {
 		Comment: recvReview.Comment,
 	}
 
-	database.Database.Db.Create(&review)
+	err = database.Database.Db.Create(&review).Error
+
+	if err != nil {
+		myLogger.Error("DB Insertion Failed")
+		return c.Status(400).JSON(err.Error())
+	}
 
 	respReview := RespReview {
 		Rating: review.Rating,
@@ -81,16 +104,22 @@ func AddReview(c *fiber.Ctx) error {
 
 func GetBookReviews (c* fiber.Ctx) error {
 	// var userID int = int(c.Locals("user_id").(float64))
-	
+	myLogger := customLogger.NewLogger()
 	bookID, err := c.ParamsInt("id")
 
 	if err != nil {
+		myLogger.Warning("Non Integer ID passed")
 		return c.Status(400).JSON("ID must be an integer")
 	}
 
 	var book models.Book
 
-	database.Database.Db.Find(&book, "id=?", bookID)
+	err = database.Database.Db.Find(&book, "id=?", bookID).Error
+
+	if err != nil {
+		myLogger.Error("DB Search Failed")
+		return c.Status(400).JSON(err.Error())
+	}
 
 	if book.ID == 0 {
 		return c.Status(400).JSON("Invalid Book ID")
@@ -98,7 +127,12 @@ func GetBookReviews (c* fiber.Ctx) error {
 
 	var reviews []models.Review
 
-	database.Database.Db.Find(&reviews, "book_id=?", bookID)
+	err = database.Database.Db.Find(&reviews, "book_id=?", bookID).Error
+
+	if err != nil {
+		myLogger.Error("DB Search Failed")
+		return c.Status(400).JSON(err.Error())
+	}
 
 	var respReviews []RespReview
 
@@ -118,11 +152,17 @@ func GetBookReviews (c* fiber.Ctx) error {
 }
 
 var GetUserReviews = func(c *fiber.Ctx) error {
+	myLogger := customLogger.NewLogger()
 	var userID int = int(c.Locals("user_id").(float64))
 
 	var reviews []models.Review
 
-	database.Database.Db.Find(&reviews, "user_id=?", userID)
+	err:= database.Database.Db.Find(&reviews, "user_id=?", userID).Error
+
+	if err != nil {
+		myLogger.Error("DB Search Failed")
+		return c.Status(400).JSON(err.Error())
+	}
 
 	var respReviews []RespReview
 
@@ -142,17 +182,24 @@ var GetUserReviews = func(c *fiber.Ctx) error {
 }
 
 func EditReview (c *fiber.Ctx) error {
+	myLogger := customLogger.NewLogger()
 	var userID int = int(c.Locals("user_id").(float64))
 
 	var recvReview RecvReview
 
 	if err:= c.BodyParser(&recvReview); err!=nil {
+		myLogger.Error("JSON Parsing Failed")
 		return c.Status(400).JSON(err.Error())
 	}
 
 	var book models.Book
 
-	database.Database.Db.Find(&book, "id=?", recvReview.BookID)
+	err := database.Database.Db.Find(&book, "id=?", recvReview.BookID).Error
+
+	if err != nil {
+		myLogger.Error("DB Search Failed")
+		return c.Status(400).JSON(err.Error())
+	}
 
 	if book.ID == 0 {
 		return c.Status(400).JSON("Invalid Book ID")
@@ -164,7 +211,14 @@ func EditReview (c *fiber.Ctx) error {
 
 	var review models.Review
 
-	database.Database.Db.Find(&review, "user_id=? AND book_id=?", userID, recvReview.BookID)
+	err = database.Database.Db.Find(&review, "user_id=? AND book_id=?", userID, recvReview.BookID).Error
+
+	if err != nil {
+
+		myLogger.Error("DB Search Failed")
+		return c.Status(400).JSON(err.Error())
+
+	}
 
 	if review.ID == 0 {
 		return c.Status(400).JSON("No review found")
@@ -173,7 +227,12 @@ func EditReview (c *fiber.Ctx) error {
 	review.Rating = recvReview.Rating
 	review.Comment = recvReview.Comment
 
-	database.Database.Db.Save(&review)
+	err = database.Database.Db.Save(&review).Error
+
+	if err != nil {
+		myLogger.Error("DB Update Failed")
+		return c.Status(400).JSON(err.Error())
+	}
 
 	respReview := RespReview {
 		Rating: review.Rating,
@@ -184,18 +243,24 @@ func EditReview (c *fiber.Ctx) error {
 }
 
 var DeleteReview = func(c *fiber.Ctx) error {
-
+	myLogger := customLogger.NewLogger()
 	var userID int = int(c.Locals("user_id").(float64))
 
 	var recvID RecvID
 
 	if err:= c.BodyParser(&recvID); err!=nil {
+		myLogger.Error("JSON Parsing Failed")
 		return c.Status(400).JSON(err.Error())
 	}
 
 	var book models.Book
 
-	database.Database.Db.Find(&book, "id=?", recvID.BookID)
+	err:= database.Database.Db.Find(&book, "id=?", recvID.BookID).Error
+
+	if err != nil {
+		myLogger.Error("DB Search Failed")
+		return c.Status(400).JSON(err.Error())
+	}
 
 	if book.ID == 0 {
 		return c.Status(400).JSON("Invalid Book ID")
@@ -203,27 +268,44 @@ var DeleteReview = func(c *fiber.Ctx) error {
 
 	var review models.Review
 
-	database.Database.Db.Find(&review, "user_id=? AND book_id=?", userID, recvID.BookID)
+	err = database.Database.Db.Find(&review, "user_id=? AND book_id=?", userID, recvID.BookID).Error
+
+	if err != nil {
+		myLogger.Error("DB Search Failed")
+		return c.Status(400).JSON(err.Error())
+	}
 
 	if review.ID == 0 {
 		return c.Status(400).JSON("No review found")
 	}
 
-	database.Database.Db.Delete(&review)
+	err = database.Database.Db.Delete(&review).Error
+
+	if err != nil {
+		myLogger.Error("DB Deletion Failed")
+		return c.Status(400).JSON(err.Error())
+	}
 
 	return c.Status(200).JSON("Review deleted")
 }
 
 func GetAverageRating (c *fiber.Ctx) error {
+	myLogger := customLogger.NewLogger()
 	bookID, err := c.ParamsInt("id")
 
 	if err != nil {
+		myLogger.Warning("Non Integer ID passed")
 		return c.Status(400).JSON("ID must be an integer")
 	}
 
 	var reviews []models.Review
 
-	database.Database.Db.Find(&reviews, "book_id=?", bookID)
+	err = database.Database.Db.Find(&reviews, "book_id=?", bookID).Error
+
+	if err != nil {
+		myLogger.Error("DB Search Failed")
+		return c.Status(400).JSON(err.Error())
+	}
 
 	if len(reviews) == 0 {
 		return c.Status(400).JSON("No reviews found for this book")

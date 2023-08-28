@@ -3,6 +3,7 @@ package routes
 import (
 	"fmt"
 
+	"github.com/RohanKhatua/fiber-jwt/customLogger"
 	"github.com/RohanKhatua/fiber-jwt/database"
 	"github.com/RohanKhatua/fiber-jwt/models"
 	"github.com/gofiber/fiber/v2"
@@ -14,17 +15,24 @@ type RecvPurchase struct {
 }
 
 func MakePurchase(c *fiber.Ctx) error {
+	myLogger := customLogger.NewLogger()
 	var userID int = int(c.Locals("user_id").(float64))
 
 	var recvPurchase RecvPurchase
 
 	if err := c.BodyParser(&recvPurchase); err != nil {
+		myLogger.Error("JSON Parsing Failed")
 		return c.Status(400).JSON(err.Error())
 	}
 
 	var book models.Book
 
-	database.Database.Db.Find(&book, "id=?", recvPurchase.BookID)
+	err:= database.Database.Db.Find(&book, "id=?", recvPurchase.BookID).Error
+
+	if err != nil {
+		myLogger.Error("DB Search Failed")
+		return c.Status(400).JSON(err.Error())
+	}
 
 	if book.ID == 0 {
 		return c.Status(400).JSON("Invalid Book ID")
@@ -42,13 +50,23 @@ func MakePurchase(c *fiber.Ctx) error {
 		Quantity: recvPurchase.Quantity,
 	}
 
-	database.Database.Db.Create(&purchase)
+	err = database.Database.Db.Create(&purchase).Error
+
+	if err != nil {
+		myLogger.Error("DB Insertion Failed")
+		return c.Status(400).JSON(err.Error())
+	}
 
 	book.Quantity -= recvPurchase.Quantity
 
-	database.Database.Db.Save(&book)
+	err = database.Database.Db.Save(&book).Error
 
-	return c.Status(200).JSON("Purchase Successful")
+	if err != nil {
+		myLogger.Error("DB Update Failed")
+		return c.Status(400).JSON(err.Error())
+	}
+
+	return c.Status(200).JSON("Purchase Successful\nPurchaseID:"+fmt.Sprint(purchase.ID)+"\nBookID:"+fmt.Sprint(purchase.BookID)+"\nQuantity:"+fmt.Sprint(purchase.Quantity))
 
 
 }

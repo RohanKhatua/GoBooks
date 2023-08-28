@@ -1,9 +1,7 @@
 package database
 
 import (
-	"log"
-	"os"
-
+	"github.com/RohanKhatua/fiber-jwt/customLogger"
 	"github.com/RohanKhatua/fiber-jwt/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -21,19 +19,20 @@ func GlobalActivationScope(db *gorm.DB) *gorm.DB {
 var Database DbInstance
 
 func ConnectDb () {
+	myLogger := customLogger.NewLogger()
 	dsn := "user=myuser password=password dbname=mydb host=localhost port=5432 sslmode=disable"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	db.Scopes(GlobalActivationScope)
 
 	if err!=nil {
-		log.Fatal("Failed to connect to DB")
-		os.Exit(2)
+		myLogger.Fatal("Could Not Connect to DB")
+		// os.Exit(2)
 	}
 
-	log.Println("Connected to DB Successfully")
+	myLogger.Info("Connected to DB Successfully")
 
 	db.Logger = logger.Default.LogMode(logger.Info)
-	log.Println("Running Migrations")
+	myLogger.Info("Runnning Migrations")
 
 	db.AutoMigrate(&models.User{})
 	db.AutoMigrate(&models.Book{})
@@ -41,7 +40,7 @@ func ConnectDb () {
 	db.AutoMigrate(&models.Purchase{})
 	db.AutoMigrate(&models.Review{})
 
-	log.Println("Migrations Complete")
+	myLogger.Info("Migrations Complete")
 
 	
 	Database = DbInstance{Db: db}
