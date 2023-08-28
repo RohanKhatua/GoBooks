@@ -20,7 +20,7 @@ func AddToCart(c *fiber.Ctx) error {
 	var recvID RecvID
 
 	if err := c.BodyParser(&recvID); err != nil {
-		myLogger.Error("JSON Parsing Failed")
+		//myLogger.Error("JSON Parsing Failed")
 		return err
 	}
 
@@ -32,7 +32,7 @@ func AddToCart(c *fiber.Ctx) error {
 		return c.Status(400).JSON(err.Error())
 	}
 
-	if cartItem.ID != 0 {		
+	if cartItem.ID != 0 {
 		return c.Status(400).JSON("Book already in cart")
 	}
 
@@ -41,9 +41,9 @@ func AddToCart(c *fiber.Ctx) error {
 		BookID: recvID.BookID,
 	}
 
-	err:= database.Database.Db.Create(&cartItem).Error
+	err := database.Database.Db.Create(&cartItem).Error
 
-	if err!=nil {
+	if err != nil {
 		myLogger.Error("DB Insertion Failed")
 		return c.Status(400).JSON(err.Error())
 	}
@@ -58,12 +58,12 @@ func GetCartItems(c *fiber.Ctx) error {
 	var userID int = int(c.Locals("user_id").(float64))
 
 	var cartItems []models.CartItem
-	if err:=database.Database.Db.Where("user_id=?", userID).Find(&cartItems).Error; err!=nil {
+	if err := database.Database.Db.Where("user_id=?", userID).Find(&cartItems).Error; err != nil {
 		myLogger.Error("DB Search Failed")
 		return c.Status(400).JSON(err.Error())
 	}
 
-	if len(cartItems)==0 {
+	if len(cartItems) == 0 {
 		// myLogger.Warning("Empty Cart")
 		return c.Status(200).JSON("No items in cart")
 	}
@@ -72,18 +72,18 @@ func GetCartItems(c *fiber.Ctx) error {
 }
 
 // Remove a book from cart by BookID
-func RemoveFromCart (c *fiber.Ctx) error {
+func RemoveFromCart(c *fiber.Ctx) error {
 	myLogger := customLogger.NewLogger()
 	var userID int = int(c.Locals("user_id").(float64))
 	var recvID RecvID
 
-	if err := c.BodyParser(&recvID); err!=nil {
-		myLogger.Error("JSON Parsing Failed")
+	if err := c.BodyParser(&recvID); err != nil {
+		//myLogger.Error("JSON Parsing Failed")
 		return c.Status(400).JSON(err.Error())
 	}
 
 	var cartItem models.CartItem
-	if err := database.Database.Db.Where("user_id = ? AND book_id = ?", userID, recvID.BookID).First(&cartItem).Error; err!=nil {
+	if err := database.Database.Db.Where("user_id = ? AND book_id = ?", userID, recvID.BookID).First(&cartItem).Error; err != nil {
 		myLogger.Error("DB Search Failed")
 		return c.Status(400).JSON(err.Error())
 	}
@@ -92,7 +92,7 @@ func RemoveFromCart (c *fiber.Ctx) error {
 		return c.Status(400).JSON("Book not in cart")
 	}
 
-	if err:=database.Database.Db.Delete(&cartItem).Error; err!=nil {
+	if err := database.Database.Db.Delete(&cartItem).Error; err != nil {
 		myLogger.Error("DB Deletion Failed")
 		return c.Status(400).JSON(err.Error())
 	}

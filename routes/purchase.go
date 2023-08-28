@@ -10,8 +10,8 @@ import (
 )
 
 type RecvPurchase struct {
-	BookID uint `json:"book_id"`
-	Quantity uint `json:"quantity"`	
+	BookID   uint `json:"book_id"`
+	Quantity uint `json:"quantity"`
 }
 
 func MakePurchase(c *fiber.Ctx) error {
@@ -21,13 +21,13 @@ func MakePurchase(c *fiber.Ctx) error {
 	var recvPurchase RecvPurchase
 
 	if err := c.BodyParser(&recvPurchase); err != nil {
-		myLogger.Error("JSON Parsing Failed")
+		//myLogger.Error("JSON Parsing Failed")
 		return c.Status(400).JSON(err.Error())
 	}
 
 	var book models.Book
 
-	err:= database.Database.Db.Find(&book, "id=?", recvPurchase.BookID).Error
+	err := database.Database.Db.Find(&book, "id=?", recvPurchase.BookID).Error
 
 	if err != nil {
 		myLogger.Error("DB Search Failed")
@@ -45,8 +45,8 @@ func MakePurchase(c *fiber.Ctx) error {
 	}
 
 	var purchase models.Purchase = models.Purchase{
-		UserID: userID,
-		BookID: recvPurchase.BookID,
+		UserID:   userID,
+		BookID:   recvPurchase.BookID,
 		Quantity: recvPurchase.Quantity,
 	}
 
@@ -66,7 +66,6 @@ func MakePurchase(c *fiber.Ctx) error {
 		return c.Status(400).JSON(err.Error())
 	}
 
-	return c.Status(200).JSON("Purchase Successful\nPurchaseID:"+fmt.Sprint(purchase.ID)+"\nBookID:"+fmt.Sprint(purchase.BookID)+"\nQuantity:"+fmt.Sprint(purchase.Quantity))
-
+	return c.Status(200).JSON("Purchase Successful\nPurchaseID:" + fmt.Sprint(purchase.ID) + "\nBookID:" + fmt.Sprint(purchase.BookID) + "\nQuantity:" + fmt.Sprint(purchase.Quantity))
 
 }

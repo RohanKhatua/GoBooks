@@ -12,13 +12,13 @@ import (
 )
 
 type RecvReview struct {
-	BookID uint `json:"book_id"`
-	Rating int `json:"rating"`
+	BookID  uint   `json:"book_id"`
+	Rating  int    `json:"rating"`
 	Comment string `json:"comment"`
 }
 
 type RespReview struct {
-	Rating int `json:"rating"`
+	Rating  int    `json:"rating"`
 	Comment string `json:"comment"`
 }
 
@@ -28,8 +28,8 @@ func AddReview(c *fiber.Ctx) error {
 
 	var recvReview RecvReview
 
-	if err:= c.BodyParser(&recvReview); err!=nil {
-		myLogger.Error("JSON Parsing Failed")
+	if err := c.BodyParser(&recvReview); err != nil {
+		//myLogger.Error("JSON Parsing Failed")
 		return c.Status(400).JSON(err.Error())
 	}
 
@@ -78,12 +78,12 @@ func AddReview(c *fiber.Ctx) error {
 
 	if recvReview.Rating < 1 || recvReview.Rating > 5 {
 		return c.Status(400).JSON("Invalid Review : Rating must be between 1 and 5")
-	} 
+	}
 
 	var review models.Review = models.Review{
-		UserID: uint(userID),
-		BookID: recvReview.BookID,
-		Rating: recvReview.Rating,
+		UserID:  uint(userID),
+		BookID:  recvReview.BookID,
+		Rating:  recvReview.Rating,
 		Comment: recvReview.Comment,
 	}
 
@@ -94,15 +94,15 @@ func AddReview(c *fiber.Ctx) error {
 		return c.Status(400).JSON(err.Error())
 	}
 
-	respReview := RespReview {
-		Rating: review.Rating,
+	respReview := RespReview{
+		Rating:  review.Rating,
 		Comment: recvReview.Comment,
 	}
 
 	return c.Status(200).JSON(respReview)
 }
 
-func GetBookReviews (c* fiber.Ctx) error {
+func GetBookReviews(c *fiber.Ctx) error {
 	// var userID int = int(c.Locals("user_id").(float64))
 	myLogger := customLogger.NewLogger()
 	bookID, err := c.ParamsInt("id")
@@ -137,8 +137,8 @@ func GetBookReviews (c* fiber.Ctx) error {
 	var respReviews []RespReview
 
 	for _, review := range reviews {
-		respReview := RespReview {
-			Rating: review.Rating,
+		respReview := RespReview{
+			Rating:  review.Rating,
 			Comment: review.Comment,
 		}
 		respReviews = append(respReviews, respReview)
@@ -157,7 +157,7 @@ var GetUserReviews = func(c *fiber.Ctx) error {
 
 	var reviews []models.Review
 
-	err:= database.Database.Db.Find(&reviews, "user_id=?", userID).Error
+	err := database.Database.Db.Find(&reviews, "user_id=?", userID).Error
 
 	if err != nil {
 		myLogger.Error("DB Search Failed")
@@ -167,8 +167,8 @@ var GetUserReviews = func(c *fiber.Ctx) error {
 	var respReviews []RespReview
 
 	for _, review := range reviews {
-		respReview := RespReview {
-			Rating: review.Rating,
+		respReview := RespReview{
+			Rating:  review.Rating,
 			Comment: review.Comment,
 		}
 		respReviews = append(respReviews, respReview)
@@ -181,14 +181,14 @@ var GetUserReviews = func(c *fiber.Ctx) error {
 	return c.Status(200).JSON(respReviews)
 }
 
-func EditReview (c *fiber.Ctx) error {
+func EditReview(c *fiber.Ctx) error {
 	myLogger := customLogger.NewLogger()
 	var userID int = int(c.Locals("user_id").(float64))
 
 	var recvReview RecvReview
 
-	if err:= c.BodyParser(&recvReview); err!=nil {
-		myLogger.Error("JSON Parsing Failed")
+	if err := c.BodyParser(&recvReview); err != nil {
+		//myLogger.Error("JSON Parsing Failed")
 		return c.Status(400).JSON(err.Error())
 	}
 
@@ -207,7 +207,7 @@ func EditReview (c *fiber.Ctx) error {
 
 	if recvReview.Rating < 1 || recvReview.Rating > 5 {
 		return c.Status(400).JSON("Invalid Review : Rating must be between 1 and 5")
-	} 
+	}
 
 	var review models.Review
 
@@ -234,8 +234,8 @@ func EditReview (c *fiber.Ctx) error {
 		return c.Status(400).JSON(err.Error())
 	}
 
-	respReview := RespReview {
-		Rating: review.Rating,
+	respReview := RespReview{
+		Rating:  review.Rating,
 		Comment: recvReview.Comment,
 	}
 
@@ -248,14 +248,14 @@ var DeleteReview = func(c *fiber.Ctx) error {
 
 	var recvID RecvID
 
-	if err:= c.BodyParser(&recvID); err!=nil {
-		myLogger.Error("JSON Parsing Failed")
+	if err := c.BodyParser(&recvID); err != nil {
+		//myLogger.Error("JSON Parsing Failed")
 		return c.Status(400).JSON(err.Error())
 	}
 
 	var book models.Book
 
-	err:= database.Database.Db.Find(&book, "id=?", recvID.BookID).Error
+	err := database.Database.Db.Find(&book, "id=?", recvID.BookID).Error
 
 	if err != nil {
 		myLogger.Error("DB Search Failed")
@@ -289,7 +289,7 @@ var DeleteReview = func(c *fiber.Ctx) error {
 	return c.Status(200).JSON("Review deleted")
 }
 
-func GetAverageRating (c *fiber.Ctx) error {
+func GetAverageRating(c *fiber.Ctx) error {
 	myLogger := customLogger.NewLogger()
 	bookID, err := c.ParamsInt("id")
 
@@ -317,11 +317,11 @@ func GetAverageRating (c *fiber.Ctx) error {
 		sum += review.Rating
 	}
 
-	var avg float64 = float64(sum)/float64(len(reviews))
-	
+	var avg float64 = float64(sum) / float64(len(reviews))
+
 	//round avg to 2 decimal places
 
-	avg = math.Round(avg*100)/100
+	avg = math.Round(avg*100) / 100
 
 	// resp := fmt.Sprintf("Average Rating for Book ID %d is %f", bookID, avg)
 

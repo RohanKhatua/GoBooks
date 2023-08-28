@@ -34,14 +34,14 @@ func CreateBook(c *fiber.Ctx) error {
 	var userRole string = c.Locals("user_role").(string)
 
 	if userRole != "ADMIN" {
-		myLogger.Warning("Non Admin User tried to add book, UserName : "+c.Locals("user_name").(string))
+		myLogger.Warning("Non Admin User tried to add book, UserName : " + c.Locals("user_name").(string))
 		return c.Status(401).JSON("Must be Admin")
 	}
 
 	var book models.Book
 	err := c.BodyParser(&book)
 	if err != nil {
-		myLogger.Error("JSON Parsing Failed")
+		//myLogger.Error("JSON Parsing Failed")
 		return c.Status(400).JSON(err.Error())
 	}
 
@@ -52,7 +52,7 @@ func CreateBook(c *fiber.Ctx) error {
 		return c.Status(400).JSON(err.Error())
 	}
 
-	myLogger.Info("Book Added to DB, BookID:"+fmt.Sprint(book.ID))
+	myLogger.Info("Book Added to DB, BookID:" + fmt.Sprint(book.ID))
 
 	responseBook := CreateResponseBook(book)
 
@@ -90,9 +90,9 @@ func GetBookDetails(c *fiber.Ctx) error {
 func GetBooks(c *fiber.Ctx) error {
 	myLogger := customLogger.NewLogger()
 	books := []models.Book{}
-	err:= database.Database.Db.Find(&books).Error
+	err := database.Database.Db.Find(&books).Error
 
-	if err!=nil {
+	if err != nil {
 		myLogger.Error("DB Search Failed")
 		return c.Status(400).JSON(err.Error())
 	}
@@ -116,14 +116,14 @@ func DeleteBook(c *fiber.Ctx) error {
 	var userRole string = c.Locals("user_role").(string)
 
 	if userRole != "ADMIN" {
-		myLogger.Warning("Non Admin User tried to delete book, UserName : "+c.Locals("user_name").(string))
+		myLogger.Warning("Non Admin User tried to delete book, UserName : " + c.Locals("user_name").(string))
 		return c.Status(401).JSON("Must be Admin")
 	}
 
 	var recvID RecvID
 
-	if err:=c.BodyParser(&recvID); err!=nil {
-		myLogger.Error("JSON Parsing Failed")
+	if err := c.BodyParser(&recvID); err != nil {
+		//myLogger.Error("JSON Parsing Failed")
 		return c.Status(400).JSON(err.Error())
 	}
 
@@ -140,7 +140,7 @@ func DeleteBook(c *fiber.Ctx) error {
 		return c.Status(400).JSON(err.Error())
 	}
 
-	return c.Status(200).JSON("Book Deleted, BookID:"+fmt.Sprint(book.ID))
+	return c.Status(200).JSON("Book Deleted, BookID:" + fmt.Sprint(book.ID))
 }
 
 func UpdateBook(c *fiber.Ctx) error {
@@ -148,14 +148,14 @@ func UpdateBook(c *fiber.Ctx) error {
 	var userRole string = c.Locals("user_role").(string)
 
 	if userRole != "ADMIN" {
-		myLogger.Warning("Non Admin User tried to update book, UserName : "+c.Locals("user_name").(string))
+		myLogger.Warning("Non Admin User tried to update book, UserName : " + c.Locals("user_name").(string))
 		return c.Status(401).JSON("Must be Admin")
 	}
 
 	var recvID RecvID
 
-	if err:=c.BodyParser(&recvID); err!=nil {
-		myLogger.Error("JSON Parsing Failed")
+	if err := c.BodyParser(&recvID); err != nil {
+		//myLogger.Error("JSON Parsing Failed")
 		return c.Status(400).JSON(err.Error())
 	}
 
@@ -165,7 +165,7 @@ func UpdateBook(c *fiber.Ctx) error {
 
 	var book models.Book
 
-	err:= database.Database.Db.Find(&book, "id=?", recvID.BookID).Error
+	err := database.Database.Db.Find(&book, "id=?", recvID.BookID).Error
 
 	if err != nil {
 		myLogger.Error("DB Search Failed")
@@ -179,7 +179,7 @@ func UpdateBook(c *fiber.Ctx) error {
 	var newBook models.Book
 
 	if err := c.BodyParser(&newBook); err != nil {
-		myLogger.Error("JSON Parsing Failed")
+		//myLogger.Error("JSON Parsing Failed")
 		return c.Status(400).JSON(err.Error())
 	}
 
@@ -190,7 +190,7 @@ func UpdateBook(c *fiber.Ctx) error {
 		return c.Status(400).JSON(err.Error())
 	}
 
-	return c.Status(200).JSON("Book Updated, BookID:"+fmt.Sprint(book.ID))
+	return c.Status(200).JSON("Book Updated, BookID:" + fmt.Sprint(book.ID))
 }
 
 type RecvBookQuantity struct {
@@ -203,20 +203,20 @@ var ChangeBookQuantity = func(c *fiber.Ctx) error {
 	var userRole string = c.Locals("user_role").(string)
 
 	if userRole != "ADMIN" {
-		myLogger.Warning("Non Admin User tried to change book quantity, UserName : "+c.Locals("user_name").(string))
+		myLogger.Warning("Non Admin User tried to change book quantity, UserName : " + c.Locals("user_name").(string))
 		return c.Status(401).JSON("Must be Admin")
 	}
 
 	var recvBook RecvBookQuantity
 
 	if err := c.BodyParser(&recvBook); err != nil {
-		myLogger.Error("JSON Parsing Failed")
+		//myLogger.Error("JSON Parsing Failed")
 		return c.Status(400).JSON(err.Error())
 	}
 
 	var book models.Book
 
-	err:= database.Database.Db.Find(&book, "id=?", recvBook.ID).Error
+	err := database.Database.Db.Find(&book, "id=?", recvBook.ID).Error
 
 	if err != nil {
 		myLogger.Error("DB Search Failed")
@@ -234,5 +234,5 @@ var ChangeBookQuantity = func(c *fiber.Ctx) error {
 		return c.Status(400).JSON(err.Error())
 	}
 
-	return c.Status(200).JSON("Book Quantity Updated, BookID:"+fmt.Sprint(book.ID)+", New Quantity:"+fmt.Sprint(book.Quantity))
+	return c.Status(200).JSON("Book Quantity Updated, BookID:" + fmt.Sprint(book.ID) + ", New Quantity:" + fmt.Sprint(book.Quantity))
 }
