@@ -67,6 +67,7 @@ func SignUp(c *fiber.Ctx) error {
 	}
 
 	newUser.UserName = recdUserData.UserName
+	newUser.IsActivated = true
 
 	// Hash the password using SHA256
 	hash := sha256.New()
