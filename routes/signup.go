@@ -4,8 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 
-
-	customlogger "github.com/RohanKhatua/fiber-jwt/customLogger"
+	"github.com/RohanKhatua/fiber-jwt/customLogger"
 	"github.com/RohanKhatua/fiber-jwt/database"
 	"github.com/RohanKhatua/fiber-jwt/models"
 	"github.com/gofiber/fiber/v2"
@@ -37,7 +36,7 @@ func CreateResponseUser(user models.User) ResponseUser {
 
 // get user info through request body
 func SignUp(c *fiber.Ctx) error {
-	myLogger := customlogger.NewLogger()
+	myLogger := customLogger.NewLogger()
 	var recdUserData UserReceive
 
 	// problem with request body
@@ -58,7 +57,11 @@ func SignUp(c *fiber.Ctx) error {
 	if recdUserData.SuperSecretAttempt != "" {
 		super_secret := helpers.GetSuperSecret()
 		// fmt.Println("Reached Here")
-		if super_secret == recdUserData.SuperSecretAttempt {
+		hash:= sha256.New()
+		hash.Write([]byte(recdUserData.SuperSecretAttempt))
+		hashed_attempt := hex.EncodeToString(hash.Sum(nil))
+
+		if super_secret == hashed_attempt {
 			myLogger.Info("Key Matched, Admin Account Created")
 			newUser.Role = "ADMIN"
 		} else {
