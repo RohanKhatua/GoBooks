@@ -10,6 +10,7 @@ type Book struct {
 	gorm.Model
 	ID          uint `json:"id" gorm:"primaryKey"`
 	CreatedAt   time.Time
+	UpdatedAt   time.Time
 	Author      string `json:"author"`
 	Year        uint   `json:"year"`
 	Title       string `json:"title"`
