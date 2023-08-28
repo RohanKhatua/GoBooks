@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/RohanKhatua/fiber-jwt/database"
-	"github.com/RohanKhatua/fiber-jwt/helpers"
 	"github.com/RohanKhatua/fiber-jwt/models"
 	"github.com/gofiber/fiber/v2"
 )
@@ -30,23 +29,16 @@ func CreateResponseBook(book models.Book) ResponseBook {
 }
 
 func CreateBook(c *fiber.Ctx) error {
-	userRole := c.Locals("user_role").(string)
-	isAdmin := userRole == "ADMIN"
+	var userRole string = c.Locals("user_role").(string)
 
-	log.Println("ROLE : ", userRole)
-
-	if !isAdmin {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Must be an admin",
-		})
+	if userRole != "ADMIN" {
+		return c.Status(401).JSON("Must be Admin")
 	}
 
 	var book models.Book
 	err := c.BodyParser(&book)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
+		return c.Status(400).JSON(err.Error())
 	}
 
 	database.Database.Db.Create(&book)
@@ -95,31 +87,93 @@ func GetBooks(c *fiber.Ctx) error {
 }
 
 func DeleteBook(c *fiber.Ctx) error {
-	curr_user_id := c.Locals("user_id").(uint)
+	var userRole string = c.Locals("user_role").(string)
 
-	isAdmin, err := helpers.IsAdmin(curr_user_id)
-
-	if err != nil {
-		return c.Status(400).JSON(err.Error())
-	}
-
-	if !isAdmin {
+	if userRole != "ADMIN" {
 		return c.Status(401).JSON("Must be Admin")
 	}
 
-	id, err := c.ParamsInt("id")
+	var recvID RecvID
 
-	if err != nil {
-		return c.Status(400).JSON("ID must be an integer")
+	if err:=c.BodyParser(&recvID); err!=nil {
+		return c.Status(400).JSON(err.Error())
 	}
 
-	if id == 0 {
+	if recvID.BookID == 0 {
 		return c.Status(400).JSON("Book does not exist")
 	}
 
 	var book models.Book
 
-	database.Database.Db.Delete(&book, "id=?", id)
+	database.Database.Db.Delete(&book, "id=?", recvID.BookID)
 
 	return c.Status(200).JSON("Book Deleted")
+}
+
+func UpdateBook(c *fiber.Ctx) error {
+	var userRole string = c.Locals("user_role").(string)
+
+	if userRole != "ADMIN" {
+		return c.Status(401).JSON("Must be Admin")
+	}
+
+	var recvID RecvID
+
+	if err:=c.BodyParser(&recvID); err!=nil {
+		return c.Status(400).JSON(err.Error())
+	}
+
+	if recvID.BookID == 0 {
+		return c.Status(400).JSON("Book does not exist")
+	}
+
+	var book models.Book
+
+	database.Database.Db.Find(&book, "id=?", recvID.BookID)
+
+	if book.ID == 0 {
+		return c.Status(400).JSON("Book does not exist")
+	}
+
+	var newBook models.Book
+
+	if err := c.BodyParser(&newBook); err != nil {
+		return c.Status(400).JSON(err.Error())
+	}
+
+	database.Database.Db.Model(&book).Updates(newBook)
+
+	return c.Status(200).JSON("Book Updated")
+}
+
+type RecvBookQuantity struct {
+	ID       uint `json:"id"`
+	Quantity uint `json:"quantity"`
+}
+
+var ChangeBookQuantity = func(c *fiber.Ctx) error {
+
+	var userRole string = c.Locals("user_role").(string)
+
+	if userRole != "ADMIN" {
+		return c.Status(401).JSON("Must be Admin")
+	}
+
+	var recvBook RecvBookQuantity
+
+	if err := c.BodyParser(&recvBook); err != nil {
+		return c.Status(400).JSON(err.Error())
+	}
+
+	var book models.Book
+
+	database.Database.Db.Find(&book, "id=?", recvBook.ID)
+
+	if book.ID == 0 {
+		return c.Status(400).JSON("Book does not exist")
+	}
+
+	database.Database.Db.Model(&book).Update("quantity", recvBook.Quantity)
+
+	return c.Status(200).JSON("Book Quantity Updated")
 }
