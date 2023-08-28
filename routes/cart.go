@@ -21,7 +21,14 @@ func AddToCart(c *fiber.Ctx) error {
 		return err
 	}
 
-	cartItem := models.CartItem{
+	// check if book is already in cart
+
+	var cartItem models.CartItem
+	if err := database.Database.Db.Where("user_id = ? AND book_id = ?", userID, recvID.BookID).First(&cartItem).Error; err == nil {
+		return c.Status(400).JSON("Book already in cart")
+	}
+
+	cartItem = models.CartItem{
 		UserID: uint(userID),
 		BookID: recvID.BookID,
 	}
@@ -44,6 +51,7 @@ func GetCartItems(c *fiber.Ctx) error {
 
 }
 
+// Remove a book from cart by BookID
 func RemoveFromCart (c *fiber.Ctx) error {
 	var userID int = int(c.Locals("user_id").(float64))
 	var recvID RecvID
