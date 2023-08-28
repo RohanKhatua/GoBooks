@@ -14,6 +14,4 @@ type User struct {
 	Password    string `json:"pass"`
 	Role        string `json:"role"`
 	IsActivated bool   `json:"is_activated"`
-	Reviews []Review //Many Reviews
-	CartItems []CartItem //Many Cart Items
 }
