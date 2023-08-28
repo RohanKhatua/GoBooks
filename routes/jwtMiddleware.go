@@ -15,6 +15,9 @@ func JWTMiddleware(c *fiber.Ctx) error {
 		return c.Status(401).JSON("No Token")
 	}
 
+	//Remove the bearer prefix
+	token = token[7:]
+
 	// Validate the token
 	secretKey := []byte(helpers.GetSuperSecret())
 	claims := jwt.MapClaims{}
