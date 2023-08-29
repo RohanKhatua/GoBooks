@@ -10,6 +10,7 @@ import (
 )
 
 type ResponseBook struct {
+	ID          uint   `json:"id"`
 	Author      string `json:"author"`
 	Year        uint   `json:"year"`
 	Title       string `json:"title"`
@@ -20,6 +21,7 @@ type ResponseBook struct {
 func CreateResponseBook(book models.Book) ResponseBook {
 
 	return ResponseBook{
+		ID:          book.ID,
 		Author:      book.Author,
 		Year:        book.Year,
 		Title:       book.Title,
@@ -27,6 +29,15 @@ func CreateResponseBook(book models.Book) ResponseBook {
 		Price:       book.Price,
 		//user does not need to know quantity
 	}
+}
+
+type RecvUpdatedBook struct {
+	BookID      uint   `json:"book_id"`
+	Author      string `json:"author"`
+	Year        uint   `json:"year"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Price       uint   `json:"price"`
 }
 
 func CreateBook(c *fiber.Ctx) error {
@@ -43,6 +54,25 @@ func CreateBook(c *fiber.Ctx) error {
 	if err != nil {
 		//myLogger.Error("JSON Parsing Failed")
 		return c.Status(400).JSON(err.Error())
+	}
+
+	// check if book already exists
+
+	var existingBook models.Book
+
+	err = database.Database.Db.Find(&existingBook, "title=?", book.Title).Error
+
+	if err != nil {
+		if err.Error() == "record not found" {
+			// book does not exist
+		} else {
+			myLogger.Error("DB Search Failed")
+			return c.Status(400).JSON(err.Error())
+		}
+	}
+
+	if existingBook.ID != 0 {
+		return c.Status(400).JSON("Book already exists")
 	}
 
 	err = database.Database.Db.Create(&book).Error
@@ -73,14 +103,18 @@ func GetBookDetails(c *fiber.Ctx) error {
 	err = database.Database.Db.Find(&book, "id=?", id).Error
 
 	if err != nil {
+		if err.Error() == "record not found" {
+			// myLogger.Warning("Book does not exist")
+			return c.Status(400).JSON("Book does not exist")
+		}
 		// myLogger.Warning("Book does not exist")
 		myLogger.Error("DB Search Failed")
 		return c.Status(400).JSON(err.Error())
 	}
 
-	if book.ID == 0 {
-		return c.Status(400).JSON("Book does not exist")
-	}
+	// if book.ID == 0 {
+	// 	return c.Status(400).JSON("Book does not exist")
+	// }
 
 	newResponseBook := CreateResponseBook(book)
 
@@ -93,6 +127,10 @@ func GetBooks(c *fiber.Ctx) error {
 	err := database.Database.Db.Find(&books).Error
 
 	if err != nil {
+		if err.Error() == "record not found" {
+			// myLogger.Warning("Empty DB")
+			return c.Status(400).JSON("No Books Found")
+		}
 		myLogger.Error("DB Search Failed")
 		return c.Status(400).JSON(err.Error())
 	}
@@ -101,11 +139,6 @@ func GetBooks(c *fiber.Ctx) error {
 	for _, book := range books {
 		responseBook := CreateResponseBook(book)
 		ResponseBooks = append(ResponseBooks, responseBook)
-	}
-
-	if len(ResponseBooks) == 0 {
-		myLogger.Warning("Empty DB")
-		return c.Status(400).JSON("No Books Found")
 	}
 
 	return c.Status(200).JSON(ResponseBooks)
@@ -127,20 +160,19 @@ func DeleteBook(c *fiber.Ctx) error {
 		return c.Status(400).JSON(err.Error())
 	}
 
-	if recvID.BookID == 0 {
-		return c.Status(400).JSON("Book does not exist")
-	}
+	resp := "Book Deleted, BookID:" + fmt.Sprint(recvID.BookID)
 
 	var book models.Book
 
-	err := database.Database.Db.Delete(&book, "id=?", recvID.BookID).Error
+	err := database.Database.Db.Delete(&book, "id=?", recvID.BookID)
 
-	if err != nil {
-		myLogger.Error("DB Delete Failed")
-		return c.Status(400).JSON(err.Error())
+	// if delete does not affect any rows then book does not exist
+	
+	if err.RowsAffected == 0 {
+		return c.Status(400).JSON("Book does not exist")
 	}
-
-	return c.Status(200).JSON("Book Deleted, BookID:" + fmt.Sprint(book.ID))
+	myLogger.Info("Rows Affected Without Error")
+	return c.Status(200).JSON(resp)
 }
 
 func UpdateBook(c *fiber.Ctx) error {
@@ -152,22 +184,23 @@ func UpdateBook(c *fiber.Ctx) error {
 		return c.Status(401).JSON("Must be Admin")
 	}
 
-	var recvID RecvID
+	var recvUpdatedBook RecvUpdatedBook
 
-	if err := c.BodyParser(&recvID); err != nil {
-		//myLogger.Error("JSON Parsing Failed")
-		return c.Status(400).JSON(err.Error())
+	if err := c.BodyParser(&recvUpdatedBook); err != nil {
+		return c.Status(400).JSON("Failed to Parse JSON")
 	}
 
-	if recvID.BookID == 0 {
-		return c.Status(400).JSON("Book does not exist")
-	}
+	// check if bookID exists
 
 	var book models.Book
 
-	err := database.Database.Db.Find(&book, "id=?", recvID.BookID).Error
+	err := database.Database.Db.Find(&book, "id=?", recvUpdatedBook.BookID).Error
 
 	if err != nil {
+		if err.Error() == "record not found" {
+			// myLogger.Warning("Book does not exist")
+			return c.Status(400).JSON("Book does not exist")
+		}
 		myLogger.Error("DB Search Failed")
 		return c.Status(400).JSON(err.Error())
 	}
@@ -176,14 +209,15 @@ func UpdateBook(c *fiber.Ctx) error {
 		return c.Status(400).JSON("Book does not exist")
 	}
 
-	var newBook models.Book
+	// update book
 
-	if err := c.BodyParser(&newBook); err != nil {
-		//myLogger.Error("JSON Parsing Failed")
-		return c.Status(400).JSON(err.Error())
-	}
-
-	err = database.Database.Db.Model(&book).Updates(newBook).Error
+	err = database.Database.Db.Model(&book).Updates(models.Book{
+		Author:      recvUpdatedBook.Author,
+		Year:        recvUpdatedBook.Year,
+		Title:       recvUpdatedBook.Title,
+		Description: recvUpdatedBook.Description,
+		Price:       recvUpdatedBook.Price,
+	}).Error
 
 	if err != nil {
 		myLogger.Error("DB Update Failed")
@@ -194,7 +228,7 @@ func UpdateBook(c *fiber.Ctx) error {
 }
 
 type RecvBookQuantity struct {
-	ID       uint `json:"id"`
+	ID       uint `json:"book_id"`
 	Quantity uint `json:"quantity"`
 }
 
@@ -216,9 +250,11 @@ var ChangeBookQuantity = func(c *fiber.Ctx) error {
 
 	var book models.Book
 
-	err := database.Database.Db.Find(&book, "id=?", recvBook.ID).Error
-
-	if err != nil {
+	if err := database.Database.Db.Find(&book, "id=?", recvBook.ID).Error; err != nil {
+		if err.Error() == "record not found" {
+			// myLogger.Warning("Book does not exist")
+			return c.Status(400).JSON("Book does not exist")
+		}
 		myLogger.Error("DB Search Failed")
 		return c.Status(400).JSON(err.Error())
 	}
@@ -227,7 +263,7 @@ var ChangeBookQuantity = func(c *fiber.Ctx) error {
 		return c.Status(400).JSON("Book does not exist")
 	}
 
-	err = database.Database.Db.Model(&book).Update("quantity", recvBook.Quantity).Error
+	err := database.Database.Db.Model(&book).Update("quantity", recvBook.Quantity).Error
 
 	if err != nil {
 		myLogger.Error("DB Update Failed")
