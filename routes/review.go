@@ -116,7 +116,7 @@ func GetBookReviews(c *fiber.Ctx) error {
 
 	err = database.Database.Db.Find(&book, "id=?", bookID).Error
 
-	if err != nil {
+	if err != nil  && err.Error() != "record not found"{
 		myLogger.Error("DB Search Failed")
 		return c.Status(400).JSON(err.Error())
 	}

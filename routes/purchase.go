@@ -14,6 +14,39 @@ type RecvPurchase struct {
 	Quantity uint `json:"quantity"`
 }
 
+type ResponsePurchase struct {
+	PurchaseID uint `json:"purchase_id"`
+	BookID     uint `json:"book_id"`
+	Quantity   uint `json:"quantity"`
+	Price      uint `json:"price"`
+}
+
+func CreateResponsePurchase(purchase models.Purchase) ResponsePurchase {
+	// get the price by multiplying the quantity with the price of the book
+	myLogger := customLogger.NewLogger()
+	var book models.Book
+
+	err := database.Database.Db.Find(&book, "id=?", purchase.BookID).Error
+
+	if err != nil {
+		myLogger.Error("DB Search Failed")
+		return ResponsePurchase{}
+	}
+
+	if book.ID == 0 {
+		return ResponsePurchase{}
+	}
+
+	var price uint = book.Price * purchase.Quantity
+
+	return ResponsePurchase{
+		PurchaseID: purchase.ID,
+		BookID:     purchase.BookID,
+		Quantity:   purchase.Quantity,
+		Price:      price,
+	}
+}
+
 func MakePurchase(c *fiber.Ctx) error {
 	myLogger := customLogger.NewLogger()
 	var userID int = int(c.Locals("user_id").(float64))
@@ -66,6 +99,35 @@ func MakePurchase(c *fiber.Ctx) error {
 		return c.Status(400).JSON(err.Error())
 	}
 
-	return c.Status(200).JSON("Purchase Successful\nPurchaseID:" + fmt.Sprint(purchase.ID) + "\nBookID:" + fmt.Sprint(purchase.BookID) + "\nQuantity:" + fmt.Sprint(purchase.Quantity))
+	responsePurchase := CreateResponsePurchase(purchase)
 
+	return c.Status(200).JSON(responsePurchase)
+
+}
+
+func GetPurchases(c *fiber.Ctx) error {
+	myLogger := customLogger.NewLogger()
+	var userID int = int(c.Locals("user_id").(float64))
+
+	var purchases []models.Purchase
+
+	err := database.Database.Db.Find(&purchases, "user_id=?", userID).Error
+
+	if err != nil {
+		if err.Error() == "record not found" {
+			// No purchases Made
+			return c.Status(400).JSON("No purchases found")
+		} else {
+			myLogger.Error("DB Search Failed")
+			return c.Status(400).JSON(err.Error())
+		}
+	}
+
+	var responsePurchases []ResponsePurchase
+
+	for _, purchase := range purchases {
+		responsePurchases = append(responsePurchases, CreateResponsePurchase(purchase))
+	}
+
+	return c.Status(200).JSON(responsePurchases)
 }

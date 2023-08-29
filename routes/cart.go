@@ -1,12 +1,14 @@
 package routes
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/RohanKhatua/fiber-jwt/customLogger"
 	"github.com/RohanKhatua/fiber-jwt/database"
 	"github.com/RohanKhatua/fiber-jwt/models"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 type RecvID struct {
@@ -20,16 +22,20 @@ func AddToCart(c *fiber.Ctx) error {
 	var recvID RecvID
 
 	if err := c.BodyParser(&recvID); err != nil {
-		//myLogger.Error("JSON Parsing Failed")
-		return err
+		myLogger.Error("JSON Parsing Failed")
+		return c.Status(400).JSON(err.Error())
 	}
 
 	// check if book is already in cart
 
 	var cartItem models.CartItem
 	if err := database.Database.Db.Where("user_id = ? AND book_id = ?", userID, recvID.BookID).First(&cartItem).Error; err != nil {
-		myLogger.Error("DB Search Failed")
-		return c.Status(400).JSON(err.Error())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			myLogger.Info("No matching record found")
+		} else {
+			myLogger.Error("DB Search Failed: " + err.Error())
+			return c.Status(400).JSON("DB Search Failed")
+		}
 	}
 
 	if cartItem.ID != 0 {
@@ -59,6 +65,10 @@ func GetCartItems(c *fiber.Ctx) error {
 
 	var cartItems []models.CartItem
 	if err := database.Database.Db.Where("user_id=?", userID).Find(&cartItems).Error; err != nil {
+		if err.Error() == "record not found" {
+			// myLogger.Info("No matching record found")
+			return c.Status(400).JSON("No items in cart")
+		}
 		myLogger.Error("DB Search Failed")
 		return c.Status(400).JSON(err.Error())
 	}
@@ -84,12 +94,13 @@ func RemoveFromCart(c *fiber.Ctx) error {
 
 	var cartItem models.CartItem
 	if err := database.Database.Db.Where("user_id = ? AND book_id = ?", userID, recvID.BookID).First(&cartItem).Error; err != nil {
-		myLogger.Error("DB Search Failed")
-		return c.Status(400).JSON(err.Error())
-	}
-
-	if cartItem.ID == 0 {
-		return c.Status(400).JSON("Book not in cart")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			myLogger.Info("No matching record found")
+			return c.Status(400).JSON("Book not in cart")
+		} else {
+			myLogger.Error("DB Search Failed: " + err.Error())
+			return c.Status(400).JSON("DB Search Failed")
+		}
 	}
 
 	if err := database.Database.Db.Delete(&cartItem).Error; err != nil {

@@ -34,6 +34,7 @@ func CreateResponseUser(user models.User) ResponseUser {
 }
 
 
+
 // get user info through request body
 func SignUp(c *fiber.Ctx) error {
 	myLogger := customLogger.NewLogger()
@@ -44,14 +45,19 @@ func SignUp(c *fiber.Ctx) error {
 		return c.Status(400).JSON(err.Error())
 	}
 
-	// New user based on User Model
-	var newUser models.User
+	// check if username already exists
 
-	if helpers.FindUserName(recdUserData.UserName) {
-		// log.Println("Duplicate User found")
-		myLogger.Error("User Already Exists")
-		return c.Status(409).JSON("User Already Exists")
+	var user models.User
+	database.Database.Db.Where("user_name = ?", recdUserData.UserName).First(&user)
+
+	if user.ID != 0 {
+		myLogger.Warning("User tried to create account with existing username")
+		return c.Status(400).JSON("Username already exists")
 	}
+
+	// create new user
+
+	var newUser models.User
 
 	// Check if user has tried to get admin account and verify creds
 	if recdUserData.SuperSecretAttempt != "" {
