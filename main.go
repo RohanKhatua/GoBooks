@@ -8,7 +8,7 @@ import (
 )
 
 func welcome(c *fiber.Ctx) error {
-	return c.SendString("Welcome to the Bookstore")
+	return c.Status(200).JSON("Welcome to the API")
 }
 
 func setupRoutes(app *fiber.App) {
@@ -28,11 +28,11 @@ func setupRoutes(app *fiber.App) {
 	app.Put("/api/deactivate", routes.DeactivateUser)
 
 	//book routes
-	app.Post("/api/book", routes.CreateBook)
+	app.Post("/api/book", routes.CreateBook) //admin only route
 	app.Get("/api/book/:id", routes.GetBookDetails)
 	app.Get("/api/book", routes.GetBooks)
-	app.Delete("/api/book", routes.DeleteBook)
-	app.Put("/api/book", routes.UpdateBook)
+	app.Delete("/api/book", routes.DeleteBook) //admin only route
+	app.Put("/api/book", routes.UpdateBook) //admin only route
 	app.Put("/api/book/quantity", routes.ChangeBookQuantity) //admin only route
 
 	// cart routes
@@ -53,15 +53,23 @@ func setupRoutes(app *fiber.App) {
 	// Purchase routes
 
 	app.Post("/api/purchase", routes.MakePurchase)
+	app.Get("/api/purchase", routes.GetPurchases)
+
+	// S3 routes
+
+	app.Post("/api/upload", routes.UploadFile)
 
 }
 
 func main() {
 	database.ConnectDb()
-	database.SeedDatabase(database.Database.Db)
+	// database.SeedDatabase(database.Database.Db)
+	// database.CleanDatabase(database.Database.Db)
 	app := fiber.New()
 
 	setupRoutes(app)
+	log.Println("Back to Main")
 
 	log.Fatal(app.Listen(":3000"))
 }
+
