@@ -33,7 +33,8 @@ func ConnectDb () {
 
 	myLogger.Info("Connected to DB Successfully")
 
-	db.Logger = logger.Default.LogMode(logger.Info)
+	db.Logger = logger.Default.LogMode(logger.Warn)
+	db.Logger = logger.Default.LogMode(logger.Error)
 	myLogger.Info("Runnning Migrations")
 
 	db.AutoMigrate(&models.User{})
@@ -49,7 +50,7 @@ func ConnectDb () {
 
 }
 
-func cleanDatabase (db *gorm.DB) {
+func CleanDatabase (db *gorm.DB) {
 	db.Exec("DELETE FROM users")
 	db.Exec("DELETE FROM books")
 	db.Exec("DELETE FROM cart_items")
@@ -59,7 +60,7 @@ func cleanDatabase (db *gorm.DB) {
 
 func SeedDatabase (db *gorm.DB) {
 	// Clean database
-	cleanDatabase(db)
+	CleanDatabase(db)
 
 	// Create sample users
 	users := []models.User{
