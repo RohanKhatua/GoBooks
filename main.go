@@ -58,6 +58,7 @@ func setupRoutes(app *fiber.App) {
 	// S3 routes
 
 	app.Post("/api/upload", routes.UploadFile)
+	app.Get("/api/download", routes.DownloadFile)
 
 }
 
@@ -68,7 +69,7 @@ func main() {
 	app := fiber.New()
 
 	setupRoutes(app)
-	log.Println("Back to Main")
+	// log.Println("Back to Main")
 
 	log.Fatal(app.Listen(":3000"))
 }
