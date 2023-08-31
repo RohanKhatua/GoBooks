@@ -7,11 +7,13 @@ import (
 	"os"
 
 	"github.com/RohanKhatua/fiber-jwt/customLogger"
+	"github.com/RohanKhatua/fiber-jwt/database"
 	"github.com/RohanKhatua/fiber-jwt/helpers"
+	"github.com/RohanKhatua/fiber-jwt/models"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
-	"github.com/aws/aws-sdk-go-v2/service/s3"	
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -58,14 +60,49 @@ func UploadFile(c *fiber.Ctx) error {
 type DownloadRequest struct {
 	Item string `json:"item"` //filename
 	Path string `json:"path"` //path to download to
-	// DisplayProgress bool `json:"display_progress"`
+}
+
+func createDownloadRequest (book_id uint) (DownloadRequest, error) {
+	var book models.Book
+
+	if err:= database.Database.Db.Where("id = ?",book_id).First(&book).Error; err!=nil {
+		return DownloadRequest{}, err
+	}
+
+	author := book.Author
+	title := book.Title
+
+	filename := fmt.Sprintf("%s - %s.pdf",author,title)
+
+	return DownloadRequest{
+		Item: filename,
+		Path: "./",
+	}, nil
 }
 
 func DownloadFile(c *fiber.Ctx) error {
-	var downloadRequest DownloadRequest
+	var recvID RecvID
 
-	if err:= c.BodyParser(&downloadRequest); err!=nil {
+	if err:= c.BodyParser(&recvID); err!=nil {
 		return c.Status(400).JSON("Failed to Parse JSON")
+	}	
+
+	// Check if user has purchased book
+
+	var userID int = int(c.Locals("user_id").(float64))
+
+	var purchase models.Purchase
+
+	if err:= database.Database.Db.Where("user_id = ? AND book_id = ?",userID,recvID.BookID).First(&purchase).Error; err!=nil {
+		return c.Status(400).JSON("Book not purchased")
+	}
+
+	// Create Download Request
+
+	downloadRequest, err := createDownloadRequest(recvID.BookID)
+
+	if err!=nil {
+		return c.Status(400).JSON("Failed to Create Download Request")
 	}
 
 	cfg, err := config.LoadDefaultConfig(context.TODO())
