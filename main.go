@@ -60,6 +60,10 @@ func setupRoutes(app *fiber.App) {
 	app.Post("/api/upload", routes.UploadFile)
 	app.Get("/api/download", routes.DownloadFile)
 
+	// Search routes
+
+	app.Get("/api/search", routes.Search)
+
 }
 
 func main() {
