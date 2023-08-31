@@ -2,9 +2,11 @@ package main
 
 import (
 	"log"
+
 	"github.com/RohanKhatua/fiber-jwt/database"
 	"github.com/RohanKhatua/fiber-jwt/routes"
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
 )
 
 func welcome(c *fiber.Ctx) error {
@@ -67,9 +69,18 @@ func setupRoutes(app *fiber.App) {
 }
 
 func main() {
+	err := godotenv.Load(".env")
+
+	if err != nil {
+		log.Fatal("Could not load .env file")
+	}
+
+
 	database.ConnectDb()
+
+	database.CleanDatabase(database.Database.Db)
+	database.SeedDatabase(database.Database.Db)
 	// database.SeedDatabase(database.Database.Db)
-	// database.CleanDatabase(database.Database.Db)
 	app := fiber.New()
 
 	setupRoutes(app)

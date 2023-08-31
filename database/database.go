@@ -1,6 +1,12 @@
 package database
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+
+	"log"
+	"os"
 	"time"
 
 	"github.com/RohanKhatua/fiber-jwt/customLogger"
@@ -20,13 +26,22 @@ func GlobalActivationScope(db *gorm.DB) *gorm.DB {
 
 var Database DbInstance
 
-func ConnectDb () {
+func ConnectDb() {
 	myLogger := customLogger.NewLogger()
-	dsn := "user=myuser password=password dbname=mydb host=localhost port=5432 sslmode=disable"
+
+	log.Println("Reached Connect DB")
+	host := os.Getenv("DB_HOST")
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	db_name := os.Getenv("DB_DATABASE")
+
+	dsn := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=5432", user, password, db_name, host)
+	// log.Println(dsn)
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	db.Scopes(GlobalActivationScope)
 
-	if err!=nil {
+	if err != nil {
 		myLogger.Fatal("Could Not Connect to DB")
 		// os.Exit(2)
 	}
@@ -35,37 +50,36 @@ func ConnectDb () {
 
 	db.Logger = logger.Default.LogMode(logger.Warn)
 	db.Logger = logger.Default.LogMode(logger.Error)
-	myLogger.Info("Runnning Migrations")
 
-	db.AutoMigrate(&models.User{})
-	db.AutoMigrate(&models.Book{})
-	db.AutoMigrate(&models.CartItem{})
-	db.AutoMigrate(&models.Purchase{})
-	db.AutoMigrate(&models.Review{})
+	if os.Getenv("SHOULD_MIGRATE") != "" {
+		myLogger.Info("Runnning Migrations")
 
-	myLogger.Info("Migrations Complete")
+		//TODO : ADD into one line
 
-	
+		db.AutoMigrate(&models.User{})
+		db.AutoMigrate(&models.Book{})
+		db.AutoMigrate(&models.CartItem{})
+		db.AutoMigrate(&models.Purchase{})
+		db.AutoMigrate(&models.Review{})
+
+		myLogger.Info("Migrations Complete")
+
+	}
+
 	Database = DbInstance{Db: db}
 
 }
 
-func CleanDatabase (db *gorm.DB) {
-	db.Exec("DELETE FROM users")
-	db.Exec("DELETE FROM books")
-	db.Exec("DELETE FROM cart_items")
-	db.Exec("DELETE FROM purchases")
-	db.Exec("DELETE FROM reviews")	
-}
-
-func SeedDatabase (db *gorm.DB) {
+func SeedDatabase(db *gorm.DB) {
 	// Clean database
-	CleanDatabase(db)
+	hash := sha256.New()
+	hash.Write([]byte("pass1"))
+	hashed_pass := hex.EncodeToString(hash.Sum(nil))
 
 	// Create sample users
 	users := []models.User{
-		{UserName: "user1", Password: "pass1", Role: "user", IsActivated: true},
-		{UserName: "user2", Password: "pass2", Role: "user", IsActivated: true},
+		{UserName: "user1", Password: hashed_pass, Role: "user", IsActivated: true},
+		{UserName: "user2", Password: hashed_pass, Role: "user", IsActivated: true},
 	}
 	for i := range users {
 		db.Create(&users[i])
@@ -110,4 +124,12 @@ func SeedDatabase (db *gorm.DB) {
 	myLogger := customLogger.NewLogger()
 
 	myLogger.Info("Seeding Complete")
+}
+
+func CleanDatabase(db *gorm.DB) {
+	db.Exec("DELETE FROM cart_items")
+	db.Exec("DELETE FROM purchases")
+	db.Exec("DELETE FROM reviews")
+	db.Exec("DELETE FROM users")
+	db.Exec("DELETE FROM books")
 }
