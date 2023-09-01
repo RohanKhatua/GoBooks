@@ -26,6 +26,7 @@ func UploadFile(c *fiber.Ctx) error {
 		return c.Status(401).JSON("Unauthorized")
 	}
 
+	// File Name of the form <Author> - <Title>.pdf
 	file, err := c.FormFile("uploadFile")
 
 	if err != nil {
@@ -132,5 +133,5 @@ func DownloadFile(c *fiber.Ctx) error {
 		return c.Status(400).JSON("Failed to download file")
 	}
 
-	return c.Status(200).JSON("File Downloaded")
+	return c.Status(200).JSON("File Downloaded" + downloadRequest.Path)
 }
