@@ -133,6 +133,8 @@ func DownloadFile(c *fiber.Ctx) error {
 		return c.Status(400).JSON("Failed to download file")
 	}
 
+	defer os.Remove(downloadRequest.Item)
+
 	return c.Status(200).SendFile(downloadRequest.Item)
 
 	// return c.Status(200).JSON("File Downloaded" + downloadRequest.Path)
