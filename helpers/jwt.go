@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/RohanKhatua/fiber-jwt/models"
@@ -15,6 +16,7 @@ func GenerateJWT(user models.User) (string, error) {
 	claims["user_id"] = user.ID
 	claims["user_name"] = user.UserName
 	claims["role"] = user.Role
+	claims["isActivated"] = strconv.FormatBool(user.IsActivated)
 
 	expirationTime := time.Now().Add(24*time.Hour)
 	claims["exp"] = expirationTime.Unix()

@@ -25,6 +25,7 @@ func ActivateUser(c *fiber.Ctx) error {
 	}
 
 	user.IsActivated = true
+	c.Locals("isActivated", "true")
 
 	err = database.Database.Db.Save(&user).Error
 
@@ -54,6 +55,7 @@ func DeactivateUser(c *fiber.Ctx) error {
 	}
 
 	user.IsActivated = false
+	c.Locals("isActivated", "false")
 
 	err = database.Database.Db.Save(&user).Error
 	

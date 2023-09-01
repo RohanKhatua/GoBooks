@@ -18,8 +18,9 @@ type RecvReview struct {
 }
 
 type RespReview struct {
-	Rating  int    `json:"rating"`
-	Comment string `json:"comment"`
+	// BookName uint `json:"book_name"`
+	Rating   int    `json:"rating"`
+	Comment  string `json:"comment"`
 }
 
 func AddReview(c *fiber.Ctx) error {
@@ -116,7 +117,7 @@ func GetBookReviews(c *fiber.Ctx) error {
 
 	err = database.Database.Db.Find(&book, "id=?", bookID).Error
 
-	if err != nil  && err.Error() != "record not found"{
+	if err != nil && err.Error() != "record not found" {
 		myLogger.Error("DB Search Failed")
 		return c.Status(400).JSON(err.Error())
 	}
@@ -138,6 +139,7 @@ func GetBookReviews(c *fiber.Ctx) error {
 
 	for _, review := range reviews {
 		respReview := RespReview{
+			// BookName: review.BookID,
 			Rating:  review.Rating,
 			Comment: review.Comment,
 		}
@@ -168,6 +170,7 @@ var GetUserReviews = func(c *fiber.Ctx) error {
 
 	for _, review := range reviews {
 		respReview := RespReview{
+
 			Rating:  review.Rating,
 			Comment: review.Comment,
 		}

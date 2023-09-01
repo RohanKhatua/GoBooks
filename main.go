@@ -22,11 +22,19 @@ func setupRoutes(app *fiber.App) {
 
 	// implement middleware
 	app.Use(routes.JWTMiddleware)
+	// below this all routes are protected by JWT Middleware have to be signed in to access them
 	app.Get("/api/protected", routes.ExampleProtectedRoute)
 
 	//user activation routes
 
+	// activation route is unprotected by Activation Middleware
 	app.Put("/api/activate", routes.ActivateUser)
+
+	app.Use(routes.ActivationMiddleware)
+
+	// below this all routes are protected by Activation Middleware have to be activated to access them
+
+	// Cannot deactivate unless activated first
 	app.Put("/api/deactivate", routes.DeactivateUser)
 
 	//book routes
@@ -78,8 +86,8 @@ func main() {
 
 	database.ConnectDb()
 
-	database.CleanDatabase(database.Database.Db)
-	database.SeedDatabase(database.Database.Db)
+	// database.CleanDatabase(database.Database.Db)
+	// database.SeedDatabase(database.Database.Db)
 	// database.SeedDatabase(database.Database.Db)
 	app := fiber.New()
 

@@ -29,14 +29,17 @@ func JWTMiddleware(c *fiber.Ctx) error {
 		return c.Status(401).JSON("Token Invalid")
 	}
 
-	// Set user ID in the context's "locals"
+	// Set user details in the context's "locals"
 	c.Locals("user_id", claims["user_id"])
 	c.Locals("user_name", claims["user_name"])
 	c.Locals("user_role", claims["role"])
+	c.Locals("isActivated", claims["isActivated"])
+
 	log.Println("Current Logged In User :")
 	log.Println("USER ID :",claims["user_id"])
 	log.Println("USER NAME : ", claims["user_name"])
 	log.Println("USER_ROLE : ", claims["role"])
+	log.Println("USER_ACTIVATED : ", claims["isActivated"])
 	// Convert to int
 
 	return c.Next()
