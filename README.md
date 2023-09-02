@@ -9,6 +9,10 @@ This project was made for the Summer Internship Recruitment Process of Balkan ID
 
 **The Complete API documentation can be found in the form of Postman Collection [here](https://documenter.getpostman.com/view/25992245/2s9Y5ZvMbf).**
 
+## System Design 
+
+![Alt text](https://excalidraw.com/#json=C3Z9JICClLMGBOFrqxy2H,Isl3LcrXvd5aHvGNqwAs-A)
+
 ## Tech Stack
 
 1. **Go**: Go is a statically-typed, compiled language used for building efficient and scalable backend APIs.
