@@ -58,6 +58,8 @@ AWS_SECRET_ACCESS_KEY=
 1. Create a .env file in the root directory as shown above.
 2. ```go run .```
 3. The server will be running locally, send requests to it using tools like Postman.
+
+*Note : The Token obtained through log in or signup must be passed as a request header to all subsequent routes. This can be done by adding a header field named* ```Authorization``` *whose value should be* ```Bearer <Token>```. *Without this all routes will return a Response of Unauthorized. This can be easily achieved by Adding the token to the Authorization Section of the Postman Collection*
 ## Features
 
 ### Authentication and Authorization
