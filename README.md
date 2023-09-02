@@ -7,7 +7,7 @@ This project was made for the Summer Internship Recruitment Process of Balkan ID
 
 🔗The API is hosted [here](https://books-api.rohankhatua.dev/api)
 
-**The Complete API documentation can be found in the form of Postman Collection [here](https://documenter.getpostman.com/view/25992245/2s9Y5ZvMbf).**
+**The Complete API documentation can be found in the form of a Postman Collection [here](https://documenter.getpostman.com/view/25992245/2s9Y5ZvMbf).**
 
 ## System Design 
 
@@ -27,9 +27,37 @@ This project was made for the Summer Internship Recruitment Process of Balkan ID
 
 ## Usage
 
+### Hosted API
+
 1. Visit the API URL and make requests using the provided API documentation. 
 2. Applications like **Postman** can be used to easily send requests and receive responses from the API.
 3. `cURL` requests can also be sent to the API. Install `cURL` from [here](https://everything.curl.dev/get).
+
+### Local Usage
+
+```shell
+git clone https://github.com/BalkanID-University/vit-2025-summer-engineering-internship-task-RohanKhatua
+```
+```shell
+cd vit-2025-summer-engineering-internship-task-RohanKhatua
+```
+#### Example .env file
+
+```env
+super_secret = "COOKIES"
+AWS_REGION="ap-south-1"
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+DB_HOST=
+DB_USER=
+DB_PASSWORD=
+DB_DATABASE=
+AWS_SECRET_ACCESS_KEY=
+```
+
+1. Create a .env file in the root directory as shown above.
+2. ```go run .```
+3. The server will be running locally, send requests to it using tools like Postman.
 ## Features
 
 ### Authentication and Authorization
@@ -66,3 +94,5 @@ This project was made for the Summer Internship Recruitment Process of Balkan ID
 1. The API is hosted on an AWS EC2 instance.
 2. The application is completely Dockerized
 3. An Ngnix reverse proxy sits between the user and web server and forwards requests to it using a defined https configuration.
+
+Made with ❤️ and **Go** by Rohan Khatua. 👋
