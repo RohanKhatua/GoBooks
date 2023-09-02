@@ -11,7 +11,7 @@ This project was made for the Summer Internship Recruitment Process of Balkan ID
 
 ## System Design 
 
-![Alt text](https://excalidraw.com/#json=C3Z9JICClLMGBOFrqxy2H,Isl3LcrXvd5aHvGNqwAs-A)
+![System Design Image](https://raw.githubusercontent.com/RohanKhatua/fiber-jwt/main/sys_design.png?token=GHSAT0AAAAAACE3PL3XLRGCIKAOZLMJADOIZHTG7CA)
 
 ## Tech Stack
 
