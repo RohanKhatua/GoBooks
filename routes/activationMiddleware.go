@@ -9,7 +9,7 @@ import (
 )
 
 func ActivationMiddleware(c *fiber.Ctx) error {
-	log.Println("From Middleware" , c.Locals("isActivated").(string))
+	// log.Println("From Middleware" , c.Locals("isActivated").(string))
 
 	var user models.User
 
